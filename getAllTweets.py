@@ -4,6 +4,7 @@ import pandas as pd
 import csv
 from colorama import Fore, Back, Style
 from difflib import SequenceMatcher
+from fuzzywuzzy import fuzz
 
 
 # read configs
@@ -32,7 +33,7 @@ tweets = api.mentions_timeline()
 
 # user tweets
 user = tweets[0].user.screen_name
-limit=300
+limit=100
 
 tweets = tweepy.Cursor(api.user_timeline, screen_name=user, count=200, tweet_mode='extended').items(limit)
 
@@ -45,19 +46,30 @@ def similar(a, b):
 # create dataframe
 columns = ['User', 'Tweet']
 data = []
+
+for tweet in tweets:
+    if (not tweet.retweeted) and ('RT @' not in tweet.full_text):
+        print(str(tweet.id) + '-' + tweet.user.name + '-'+ tweet.full_text)
+
 for tweet in tweets:
     data.append([tweet.user.screen_name, tweet.full_text])
-    if(similar(tweet.full_text, tweet.full_text)):
+    if(fuzz.token_sort_ratio(tweet.full_text, tweet.full_text)):
     #if('folicule' in tweet.full_text):
         val = True
         print("Le tweet ressemble fortement à:", end=" ") ; print(Fore.BLUE + tweet.full_text) ; print(Style.RESET_ALL)
-        print(status.text)
+        #print(status.text)
         break
     else:
         val = False
 
 df = pd.DataFrame(data, columns=columns)
 
+Str1 = "Ceci est un test"
+Str2 = "un test est ceci"
+
+Token_Sort_Ratio = fuzz.token_sort_ratio(Str1,Str2)
+
+print(Token_Sort_Ratio)
 if(val == True):
     print(Fore.MAGENTA + "Le tweet a déjà été écrit sur ce profile !") ; print(Style.RESET_ALL)
 else:
